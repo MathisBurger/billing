@@ -3,38 +3,48 @@ from main import default_runner
 import os
 import subprocess
 
+# static values
 UPLOAD_FOLDER = "./upload"
 ALLOWED_EXTENSIONS = {'pdf'}
-WANTED_FILES = ["ABRG", "Anschreiben", "BWA", "BEW", "EGT"]
+WANTED_FILES = ["ABRG", "Anschreiben", "BWA", "BEW", "EGT", "JOURNAL", "RL", "VB", "WP_EINZEL"]
 
+# Creates basic flask app
 app = Flask(__name__)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 app.add_url_rule(
     "/process/<obj>", endpoint="download_file", build_only=True
 )
 
+# Checks if a file is allowed
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+# Default file upload
 @app.route('/', methods=['GET', 'POST'])
 def upload_file():
+
+    # Removes unnessesary data
     try:
         os.remove("output.zip")
         os.removedirs(app.config['UPLOAD_FOLDER'])
         os.removedirs("./output")
     except:
         pass
+
+    # Creates all wanted directories
     try:
         os.mkdir(app.config['UPLOAD_FOLDER'])
         os.mkdir("./output")
     except:
         pass
+
     if request.method == 'POST':
         if request.form.get("objectId") == None:
             flash('No object id')
             return redirect(request.url)
         
+        # Saves all files 
         for i in range(len(WANTED_FILES)):
             if WANTED_FILES[i] not in request.files:
                 flash('No file part')
@@ -59,18 +69,26 @@ def upload_file():
       <label>BWA: <input type=file name=BWA></label>
       <label>BEW: <input type=file name=BEW></label>
       <label>EGT: <input type=file name=EGT></label>
+      <label>Journal: <input type=file name=JOURNAL></label>
+      <label>RL: <input type=file name=RL></label>
+      <label>VB: <input type=file name=VB></label>
+      <label>WP Einzel: <input type=file name=WP_EINZEL></label>
       <label>Objekt ID: <input type=number name=objectId></label>
       <input type=submit value=Upload>
     </form>
     '''
 
+# processes all the data
 @app.route('/process/<obj>', methods=['GET'])
 def process_data(obj):
     try:
         os.remove("ouput.zip")
     except: 
         pass
-    default_runner("./upload/BWA.pdf", "./upload/ABRG.pdf", "./upload/Anschreiben.pdf", "./upload/BEW.pdf", "./upload/EGT.pdf", f"./output/{str(obj)}")
+    try:
+        default_runner("./upload/BWA.pdf", "./upload/ABRG.pdf", "./upload/Anschreiben.pdf", "./upload/BEW.pdf", "./upload/EGT.pdf", "./upload/JOURNAL.pdf", "./upload/RL.pdf", "./upload/VB.pdf", "./upload/WP_EINZEL.pdf", "./upload/SONSTIGE.pdf", f"./output/{str(obj)}")
+    except:
+        return "Cannot process data"
     print("Start compression")
     subprocess.run(["zip", "-r", "output.zip", "./output/"])
     return send_from_directory("./", "./output.zip", "output.zip")

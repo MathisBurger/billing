@@ -18,15 +18,27 @@ def find_entries(keyword, pages):
             entries[len(entries)-1].append(pages[i])
     return entries
 
+# Default runner that is executed to process all PDF files
+# that are provided
+def default_runner(bwa_path, abrg_path, coverLetter_path, bew_path, egt_path, journal_path, rl_path, vb_path, wp_einzel_path, sonstige_path, sub):
 
-def default_runner(bwa_path, abrg_path, coverLetter_path, bew_path, egt_path, sub):
     # Init PDF readers of all documents
     bwa = PdfReader(open(bwa_path, "rb"))
     abrg = PdfReader(open(abrg_path, "rb"))
     coverLetter = PdfReader(open(coverLetter_path, "rb"))
     bew = PdfReader(open(bew_path, "rb"))
     egt = PdfReader(open(egt_path, "rb"))
-    print("")
+    journal = PdfReader(open(journal_path, "rb"))
+    rl = PdfReader(open(rl_path, "rb"))
+    vb = PdfReader(open(vb_path, "rb"))
+    wp_einzel = PdfReader(open(wp_einzel_path, "rb"))
+
+    # Adds other documents that are not specificed
+    sonst_pages = []
+    try:
+        sonst_pages = PdfReader(open(sonstige_path, "rb")).pages
+    except:
+        pass
 
     # All arranged entries in their two dimensional arrays
     # with excactly the same length
@@ -38,23 +50,22 @@ def default_runner(bwa_path, abrg_path, coverLetter_path, bew_path, egt_path, su
     print("BEW: " + str(len(bewEntries)))
     egtEntries = find_entries("Anlage zur Jahresabrechnung für den Zeitraum", egt.pages)
     print("EGT: " + str(len(egtEntries)))
+    wpEinzelEntries = find_entries("Wirtschaftsplan für das Wirtschaftsjahr", wp_einzel.pages)
+    print("WP Einzel: " + str(len(egtEntries)))
 
     # Generates all output PDFs
-    print("")
     for i in range(len(abrgEntries)):
         output = PdfWriter()
-        with_cover = add_to_doc(output, coverLetterEntries[i])
-        with_bwa = add_to_doc(with_cover, bwa.pages)
-        with_abrg = add_to_doc(with_bwa, abrgEntries[i])
-        with_bew = add_to_doc(with_abrg, bewEntries[i])
-        with_egt = add_to_doc(with_bew, egtEntries[i])
+        add_to_doc(output, coverLetterEntries[i])
+        add_to_doc(output, bwa.pages)
+        add_to_doc(output, abrgEntries[i])
+        add_to_doc(output, bewEntries[i])
+        add_to_doc(output, egtEntries[i])
+        add_to_doc(output, wpEinzelEntries[i])
+        add_to_doc(output, journal.pages)
+        add_to_doc(output, rl.pages)
+        add_to_doc(output, vb.pages)
+        add_to_doc(output, sonst_pages)
         with open(f"{sub}-{i+1}.pdf", "wb") as outputStream:
             output.write(outputStream)
     print("Done!")
-
-#bwa = input("BWA Pfad: ")
-#abrg = input("ABRG Pfad: ")
-#coverLetter = input("Anschreiben Pfad: ")
-#bew = input("BEW Pfad: ")
-#egt = input("EGT Pfad: ")
-#sub = input("Dateiname:")
