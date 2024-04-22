@@ -58,6 +58,11 @@ def upload_file():
             if file and allowed_file(file.filename):
                 filename = WANTED_FILES[i] + ".pdf"
                 file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        if 'SONSTIGE' in request.files:
+            file = request.files['SONSTIGE']
+            if file and allowed_file(file.filename):
+                filename = "SONSTIGE.pdf"
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         return redirect(url_for('download_file', obj=request.form.get("objectId")))
     return '''
     <!doctype html>
@@ -73,6 +78,7 @@ def upload_file():
       <label>RL: <input type=file name=RL></label>
       <label>VB: <input type=file name=VB></label>
       <label>WP Einzel: <input type=file name=WP_EINZEL></label>
+      <label>Sonstige: <input type=file name=SONSTIGE></label>
       <label>Objekt ID: <input type=number name=objectId></label>
       <input type=submit value=Upload>
     </form>
